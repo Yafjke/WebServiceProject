@@ -36,13 +36,6 @@ public class Controller {
 	static Integer id = null;
 	static String geometry = null;
 	
-	private final String sharedKey = "SHARED_KEY";
-	
-	private static final String SUCCESS_STATUS = "success";
-	private static final String ERROR_STATUS = "error";
-	private static final Integer CODE_SUCCESS = 100;
-	private static final Integer AUTH_FAILURE = 102;
-	
 	public static void ConnectToPostgres()
 	{
 		connection = null;
