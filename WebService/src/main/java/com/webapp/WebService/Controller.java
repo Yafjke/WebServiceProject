@@ -84,9 +84,9 @@ public class Controller {
 	public void PostData (@RequestParam(name = "geom") String insertedGeom) {
 		ConnectToPostgres();
 		try{
-			CallableStatement clbstmt = connection.prepareCall(POST_QUERRY);
-			clbstmt.setString(1, insertedGeom);
-			clbstmt.execute();
+			CallableStatement postStatement = connection.prepareCall(POST_QUERRY);
+			postStatement.setString(1, insertedGeom);
+			postStatement.execute();
 		}
 		catch (SQLException e) {
 			e.printStackTrace();
