@@ -1,7 +1,15 @@
 package com.webapp.WebService;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.PrintStream;
+import java.nio.file.FileStore;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -9,19 +17,21 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 
 @RestController
-@RequestMapping("/payment")
+@RequestMapping("/")
 
 public class Controller {
-	
+
     static final String DB_URL = "jdbc:postgresql://localhost:5432/GeoData";
     static final String USER = "postgres";
     static final String PASS = "postgres";
 	static Connection connection = null;
 	static ResultSet resultSet = null;
 	static Statement statement = null;
-	static final String QUERRY = "SELECT points.id, ST_AsText(points.geom) FROM databank.points;";
+	static final String GET_QUERRY = "SELECT points.id, ST_AsText(points.geom) FROM databank.points;";
+	static final String POST_QUERRY = "call databank.addpoint(?::geometry);";
     
 	static Integer id = null;
 	static String geometry = null;
@@ -51,17 +61,12 @@ public class Controller {
 	}
 	
 	@GetMapping("/getdata")
-	/*public BaseResponse showStatus()
-	{
-		
-		return new BaseResponse(SUCCESS_STATUS, 1);
-	}*/
 	public ArrayList<GeometryObject> GetData()
 	{
 		ConnectToPostgres();
 		ArrayList<GeometryObject> list = new ArrayList<GeometryObject>();
 		try {
-			resultSet = statement.executeQuery(QUERRY);
+			resultSet = statement.executeQuery(GET_QUERRY);
 			while(resultSet.next()) {
 				id = resultSet.getInt("id");
 				geometry = resultSet.getString("ST_AsText");
@@ -73,22 +78,25 @@ public class Controller {
 		}
 		return list;
 	}
-	/*@PostMapping("/pay")
-    public BaseResponse pay(@RequestParam(value = "key") String key, @RequestBody Method request) {
-
-        final BaseResponse response;
-
-        if (sharedKey.equalsIgnoreCase(key)) {
-            int userId = request.getUserId();
-            String itemId = request.getItemId();
-            double discount = request.getDiscount();
-            // Process the request
-            // ....
-            // Return success response to the client.
-            response = new BaseResponse(SUCCESS_STATUS, CODE_SUCCESS);
-        } else {
-            response = new BaseResponse(ERROR_STATUS, AUTH_FAILURE);
-        }
-        return response;
-    }*/
+	
+	@PostMapping("/upload") // used to be /upload/{geomtype} and ,@PathVariable String geomtype
+	/*public ResponseEntity<List<GeometryObject>> PostData(@RequestBody List<GeometryObject> geom) {
+		ConnectToPostgres();
+		//geom.stream().forEach(System.out.println()); // g for geom i dunno saw it in tutorial
+		for(GeometryObject id : geom)
+		{
+		}
+		return new ResponseEntity<List<GeometryObject>>(geom, HttpStatus.OK);
+	}*/
+	public void PostData (@RequestParam(name = "geom") String insertedGeom) {
+		ConnectToPostgres();
+		try{
+			CallableStatement clbstmt = connection.prepareCall(POST_QUERRY);
+			clbstmt.setString(1, insertedGeom);
+			clbstmt.execute();
+		}
+		catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 }
