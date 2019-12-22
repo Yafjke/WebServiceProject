@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -20,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/")
+@RequestMapping("/api")
 
 public class Controller {
 
@@ -30,8 +31,7 @@ public class Controller {
 	static Connection connection = null;
 	static ResultSet resultSet = null;
 	static Statement statement = null;
-	static final String GET_QUERRY = "SELECT points.id, ST_AsText(points.geom) FROM databank.points;";
-	static final String POST_QUERRY = "call databank.addpoint(?::geometry);";
+	static String geomDataType = null;
     
 	static Integer id = null;
 	static String geometry = null;
@@ -52,14 +52,40 @@ public class Controller {
 			e.printStackTrace();
 		}
 	}
+	private static void CallToInfromStart() {
+		try {
+		final String uri = "https://someshot.com/api/start";
+		RestTemplate restTemplate = new RestTemplate();
+		String result = restTemplate.getForObject(uri, String.class);
+		System.out.println(result);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	private static void CallToInfromEnd() {
+		try {
+		final String uri = "https://someshot.com/api/end";
+		RestTemplate restTemplate = new RestTemplate();
+		String result = restTemplate.getForObject(uri, String.class);
+		System.out.println(result);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
 	
-	@GetMapping("/getdata")
-	public ArrayList<GeometryObject> GetData()
+	@GetMapping("/getdata/{geomtype}")
+	public ArrayList<GeometryObject> GetData(@PathVariable String geomtype)
 	{
+		CallToInfromStart();
 		ConnectToPostgres();
 		ArrayList<GeometryObject> list = new ArrayList<GeometryObject>();
 		try {
-			resultSet = statement.executeQuery(GET_QUERRY);
+			String GET_QUERY = "SELECT " + geomtype + ".id, ST_AsText(" + geomtype + ".geom) FROM databank." 
+			+ geomtype +";";
+			PreparedStatement getStatement = connection.prepareStatement(GET_QUERY);
+			resultSet = getStatement.executeQuery();
 			while(resultSet.next()) {
 				id = resultSet.getInt("id");
 				geometry = resultSet.getString("ST_AsText");
@@ -69,27 +95,20 @@ public class Controller {
 		catch(SQLException e) {
 			e.printStackTrace();
 		}
+		CallToInfromEnd();
 		return list;
 	}
-	
-	@PostMapping("/upload") // used to be /upload/{geomtype} and ,@PathVariable String geomtype
-	/*public ResponseEntity<List<GeometryObject>> PostData(@RequestBody List<GeometryObject> geom) {
-		ConnectToPostgres();
-		//geom.stream().forEach(System.out.println()); // g for geom i dunno saw it in tutorial
-		for(GeometryObject id : geom)
-		{
-		}
-		return new ResponseEntity<List<GeometryObject>>(geom, HttpStatus.OK);
-	}*/
-	public void PostData (@RequestParam(name = "geom") String insertedGeom) {
+	public void PostData (@RequestParam(name = "geom") String insertedGeom, @PathVariable String geomtype) {
+		CallToInfromStart();
 		ConnectToPostgres();
 		try{
-			CallableStatement postStatement = connection.prepareCall(POST_QUERRY);
-			postStatement.setString(1, insertedGeom);
+			String POST_QUERY = "call databank.add" + geomtype + "(" + geomtype + "::geometry);";
+			CallableStatement postStatement = connection.prepareCall(POST_QUERY);
 			postStatement.execute();
 		}
 		catch (SQLException e) {
 			e.printStackTrace();
 		}
+		CallToInfromEnd();
 	}
 }
