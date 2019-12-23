@@ -52,7 +52,7 @@ public class Controller {
 			e.printStackTrace();
 		}
 	}
-	private static void CallToInfromStart() {
+	private static void CallToInformStart() {
 		try {
 		final String uri = "https://someshot.com/api/start";
 		RestTemplate restTemplate = new RestTemplate();
@@ -63,7 +63,7 @@ public class Controller {
 			e.printStackTrace();
 		}
 	}
-	private static void CallToInfromEnd() {
+	private static void CallToInformEnd() {
 		try {
 		final String uri = "https://someshot.com/api/end";
 		RestTemplate restTemplate = new RestTemplate();
@@ -78,7 +78,7 @@ public class Controller {
 	@GetMapping("/getdata/{geomtype}")
 	public ArrayList<GeometryObject> GetData(@PathVariable String geomtype)
 	{
-		CallToInfromStart();
+		CallToInformStart();
 		ConnectToPostgres();
 		ArrayList<GeometryObject> list = new ArrayList<GeometryObject>();
 		try {
@@ -95,12 +95,12 @@ public class Controller {
 		catch(SQLException e) {
 			e.printStackTrace();
 		}
-		CallToInfromEnd();
+		CallToInformEnd();
 		return list;
 	}
 	@PostMapping("/upload/{geomtype}")
 	public void PostData (@RequestParam(name = "geom") String insertedGeom, @PathVariable String geomtype) {
-		CallToInfromStart();
+		CallToInformStart();
 		ConnectToPostgres();
 		try{
 			String POST_QUERY = "call databank.add" + geomtype + "(" + geomtype + "::geometry);";
@@ -110,6 +110,6 @@ public class Controller {
 		catch (SQLException e) {
 			e.printStackTrace();
 		}
-		CallToInfromEnd();
+		CallToInformEnd();
 	}
 }
