@@ -98,6 +98,7 @@ public class Controller {
 		CallToInfromEnd();
 		return list;
 	}
+	@PostMapping("/upload/{geomtype}")
 	public void PostData (@RequestParam(name = "geom") String insertedGeom, @PathVariable String geomtype) {
 		CallToInfromStart();
 		ConnectToPostgres();
