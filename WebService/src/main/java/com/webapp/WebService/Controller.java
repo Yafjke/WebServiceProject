@@ -31,10 +31,40 @@ public class Controller {
 	static Connection connection = null;
 	static ResultSet resultSet = null;
 	static Statement statement = null;
-	static String geomDataType = null;
+	static final String POINT = "POINT";
+	static final String MULTIPOINT = "MULTIPOINT";
+	static final String LINE = "LINE";
+	static final String MULTILINE = "MULTILINE";
+	static final String POLYGON = "POLYGON";
+	static final String MULTIPOLYGON = "MULTIPOLYGON";
     
 	static Integer id = null;
 	static String geometry = null;
+	
+	public static Boolean ValidateDataType(String geomtype, String insertedGeom) {
+		Boolean state = false;
+		String DATATYPE = null;
+		if(geomtype.matches("multi(.*)"))
+		{
+			if(geomtype.matches("(.*)points")) {
+				DATATYPE = MULTIPOINT;
+			} else if (geomtype.matches("(.*)lines")) {
+				DATATYPE = MULTILINE;
+			} else if (geomtype.matches("(.*)polygons")) {
+				DATATYPE = MULTIPOLYGON;
+			}
+		} else if(geomtype.equals("points")) {
+			DATATYPE = POINT;
+		} else if(geomtype.equals("lines")) {
+			DATATYPE = LINE;
+		} else if(geomtype.equals("polygons")) {
+			DATATYPE = POLYGON;
+		}
+		if(insertedGeom.matches(DATATYPE + "(.*)")){
+			state = true;
+		} else state = false;
+		return state;
+	}
 	
 	public static void ConnectToPostgres()
 	{
@@ -103,9 +133,12 @@ public class Controller {
 		CallToInformStart();
 		ConnectToPostgres();
 		try{
-			String POST_QUERY = "call databank.add" + geomtype + "(" + geomtype + "::geometry);";
+			if(ValidateDataType(geomtype, insertedGeom) == true) {
+			String POST_QUERY = "call databank.add" + geomtype + "('" + insertedGeom + "'::geometry);";
+			System.out.println(POST_QUERY);
 			CallableStatement postStatement = connection.prepareCall(POST_QUERY);
 			postStatement.execute();
+			}
 		}
 		catch (SQLException e) {
 			e.printStackTrace();
