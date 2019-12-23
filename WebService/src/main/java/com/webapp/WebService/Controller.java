@@ -33,39 +33,38 @@ public class Controller {
 	static Statement statement = null;
 	static final String POINT = "POINT";
 	static final String MULTIPOINT = "MULTIPOINT";
-	static final String LINE = "LINE";
-	static final String MULTILINE = "MULTILINE";
+	static final String LINE = "LINESTRING";
+	static final String MULTILINE = "MULTILINESTRING";
 	static final String POLYGON = "POLYGON";
 	static final String MULTIPOLYGON = "MULTIPOLYGON";
     
 	static Integer id = null;
 	static String geometry = null;
-	
-	public static Boolean ValidateDataType(String geomtype, String insertedGeom) {
-		Boolean state = false;
-		String DATATYPE = null;
-		if(geomtype.matches("multi(.*)"))
-		{
-			if(geomtype.matches("(.*)points")) {
-				DATATYPE = MULTIPOINT;
-			} else if (geomtype.matches("(.*)lines")) {
-				DATATYPE = MULTILINE;
-			} else if (geomtype.matches("(.*)polygons")) {
-				DATATYPE = MULTIPOLYGON;
+
+	public static String DataTypeStringCreator(String insertedGeom) {
+		String geomtype = "";
+		System.out.println("HEY NOW");
+		if(insertedGeom.matches("MULTI(.*)")){
+			geomtype += "multi";
+			System.out.println(geomtype);
+			if(insertedGeom.matches("(.*)POINT(.*)")) {
+				geomtype +="points";
 			}
-		} else if(geomtype.equals("points")) {
-			DATATYPE = POINT;
-		} else if(geomtype.equals("lines")) {
-			DATATYPE = LINE;
-		} else if(geomtype.equals("polygons")) {
-			DATATYPE = POLYGON;
+			if(insertedGeom.matches("(.*)LINESTRING(.*)")) {
+				geomtype += "lines";
+			}
+			if(insertedGeom.matches("(.*)POLYGON(.*)")) {
+				geomtype += "polygons";
+			}
+		} else if(insertedGeom.matches("POINT(.*)")) {
+			geomtype +="points";
+		} else if(insertedGeom.matches("LINESTRING(.*)")) {
+			geomtype += "lines";
+		} else if(insertedGeom.matches("POLYGON(.*)")) {
+			geomtype += "polygons";
 		}
-		if(insertedGeom.matches(DATATYPE + "(.*)")){
-			state = true;
-		} else state = false;
-		return state;
+		return geomtype;
 	}
-	
 	public static void ConnectToPostgres()
 	{
 		connection = null;
@@ -128,17 +127,17 @@ public class Controller {
 		CallToInformEnd();
 		return list;
 	}
-	@PostMapping("/upload/{geomtype}")
-	public void PostData (@RequestParam(name = "geom") String insertedGeom, @PathVariable String geomtype) {
+	@PostMapping("/upload")
+	public void PostData (@RequestParam(name = "geom") String insertedGeom) {
 		CallToInformStart();
 		ConnectToPostgres();
+		String geomtype = DataTypeStringCreator(insertedGeom);
+		System.out.println(geomtype);
 		try{
-			if(ValidateDataType(geomtype, insertedGeom) == true) {
 			String POST_QUERY = "call databank.add" + geomtype + "('" + insertedGeom + "'::geometry);";
 			System.out.println(POST_QUERY);
 			CallableStatement postStatement = connection.prepareCall(POST_QUERY);
 			postStatement.execute();
-			}
 		}
 		catch (SQLException e) {
 			e.printStackTrace();
